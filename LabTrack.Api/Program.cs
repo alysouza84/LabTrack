@@ -130,4 +130,25 @@ app.MapPut("/api/equipamentos/{id:guid}", async(
     }
 );
 
+//DELETE: /api/equipamentos/{id} exclui o equipamento
+app.MapDelete("/api/equipamentos/{id:guid}", async(
+    [FromRoute] Guid id, 
+    [FromServices] LabTrackContext context) => {
+        //busca pelo id
+        var equipamento = await context.Equipamentos.FirstOrDefaultAsync(e => e.Id == id);
+
+        //verifica existencia
+        if(equipamento is null){return Results.NotFound(new{mensagem = "Equipamento não encontrado."});}
+
+        //marca para exclusao
+        context.Equipamentos.Remove(equipamento);
+
+        //confirma a exclusão no banco
+        await context.SaveChangesAsync();
+
+        //sucesso
+        return Results.NoContent();
+    }
+);
+
 app.Run();
