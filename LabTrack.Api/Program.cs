@@ -151,4 +151,74 @@ app.MapDelete("/api/equipamentos/{id:guid}", async(
     }
 );
 
+// GET: /api/alunos -> lista todos os alunos, em ordem alfabetica
+app.MapGet("/api/alunos", async ([FromServices] LabTrackContext context) =>
+{
+   var alunos = await context.Alunos
+        .AsNoTracking()
+        .OrderBy(a => a.Nome)
+        .ToListAsync();
+    
+    return Results.Ok(alunos); 
+});
+
+// GET: /api/alunos/{id} -> busca um aluno pelo id
+app.MapGet("/api/alunos/{id:guid}", async (
+    [FromRoute] Guid id,
+    [FromServices] LabTrackContext context) =>
+{
+    var aluno = await context.Alunos
+        .AsNoTracking()
+        .FirstOrDefaultAsync(a => a.Id == id);
+
+    if (aluno is null)
+    {
+        return Results.NotFound(new { mensagem = "Aluno não encontrado." });
+    }
+
+    return Results.Ok(aluno);
+});
+
+// POST: /api/alunos -> cadastra um aluno
+app.MapPost("/api/alunos", async (
+    [FromBody] AlunoRequest requisicao,
+    [FromServices] LabTrackContext context) =>
+{
+    // Normaliza os dados recebidos
+    var nome = requisicao.Nome?.Trim();
+    var matricula = requisicao.Matricula?.Trim();
+
+    // Validação 1: campos obrigatórios
+    if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(matricula))
+    {
+        return Results.BadRequest(new { mensagem = "Nome e matrícula são campos obrigatórios." });
+    }
+
+    // Validação 2: tamanhos máximos (o SQLite não verifica sozinho)
+    if (nome.Length > 100 || matricula.Length > 20)
+    {
+        return Results.BadRequest(new { mensagem = "Nome deve ter no máximo 100 caracteres e matrícula no máximo 20." });
+    }
+
+    // Validação 3: matrícula única
+    var matriculaExiste = await context.Alunos
+        .AnyAsync(a => a.Matricula == matricula);
+
+    if (matriculaExiste)
+    {
+        return Results.Conflict(new { mensagem = "Já existe um aluno com essa matrícula." });
+    }
+
+    var aluno = new Aluno
+    {
+        Nome = nome,
+        Matricula = matricula
+    };
+
+    context.Alunos.Add(aluno);
+    await context.SaveChangesAsync();
+
+    return Results.Created($"/api/alunos/{aluno.Id}", aluno);
+});
+
 app.Run();

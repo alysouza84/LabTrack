@@ -13,6 +13,7 @@ public class LabTrackContext : DbContext // ':' é a herença, ou seja, LabTrack
     // Construcao da tabela Equipamentos no banco de dados, com base na classe Equipamento. O nome da tabela será Equipamentos (que é o nome da propriedade), e as colunas serão definidas pelas propriedades da classe Equipamento.
 
     public DbSet<Equipamento> Equipamentos => Set<Equipamento>(); 
+    public DbSet<Aluno> Alunos => Set<Aluno>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -31,6 +32,20 @@ public class LabTrackContext : DbContext // ':' é a herença, ou seja, LabTrack
             entity.HasIndex(e => e.Patrimonio)
                 .IsUnique();
                 
+        });
+
+        modelBuilder.Entity<Aluno>(entity =>
+        {
+            entity.Property(a => a.Nome)
+                .IsRequired()
+                .HasMaxLength(100);
+            
+            entity.Property(a => a.Matricula)
+                .IsRequired()
+                .HasMaxLength(20);
+
+            entity.HasIndex(a => a.Matricula)
+                .IsUnique();
         });
     }
 }
