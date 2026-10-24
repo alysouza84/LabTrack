@@ -14,6 +14,7 @@ public class LabTrackContext : DbContext // ':' é a herença, ou seja, LabTrack
 
     public DbSet<Equipamento> Equipamentos => Set<Equipamento>(); 
     public DbSet<Aluno> Alunos => Set<Aluno>();
+    public DbSet<Emprestimo> Emprestimos => Set<Emprestimo>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -46,6 +47,23 @@ public class LabTrackContext : DbContext // ':' é a herença, ou seja, LabTrack
 
             entity.HasIndex(a => a.Matricula)
                 .IsUnique();
+        });
+
+        modelBuilder.Entity<Emprestimo>(entity=>
+        {
+            entity.HasOne<Aluno>()
+                .WithMany()
+                .HasForeignKey(e => e.AlunoId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasOne<Equipamento>()
+                .WithMany()
+                .HasForeignKey(e => e.EquipamentoId)
+                .OnDelete(DeleteBehavior.Restrict);
+            
+            entity.HasIndex(e => e.EquipamentoId)
+                .IsUnique()
+                .HasFilter("\"DataDevolução\" IS NULL");
         });
     }
 }
