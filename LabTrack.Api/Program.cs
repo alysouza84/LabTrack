@@ -252,7 +252,6 @@ app.MapPost("/api/emprestimos", async (
 
     if (equipamentoEmprestado){return Results.Conflict(new{mensagem = "Este equipamento já está emprestado."});}
 
-    // Cria o empréstimo
     var emprestimo = new Emprestimo
     {
         AlunoId = requisicao.AlunoId,
@@ -266,11 +265,36 @@ app.MapPost("/api/emprestimos", async (
     try{await context.SaveChangesAsync();
     }catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.Sqlite.SqliteException sqliteEx && sqliteEx.SqliteExtendedErrorCode == 2067)
     {
-        // Trata violação índice único no SQLite
         return Results.Conflict(new{mensagem = "Conflito de dados: o equipamento pode já estar emprestado."});
     }
 
     return Results.Created($"/api/emprestimos/{emprestimo.Id}",emprestimo);
+});
+
+
+ // GET: /api/emprestimos lista todos os empréstimos
+app.MapGet("/api/emprestimos", async (
+    [FromServices] LabTrackContext context) =>
+{
+    var emprestimos = await context.Emprestimos
+        .AsNoTracking()
+        .OrderByDescending(e => e.DataEmprestimo)
+        .ToListAsync();
+
+    return Results.Ok(emprestimos);
+});
+
+
+ // GET: /api/emprestimos/{id} -> consulta um empréstimo pelo ID
+app.MapGet("/api/emprestimos/{id:guid}", async (
+    [FromRoute] Guid id,
+    [FromServices] LabTrackContext context) =>
+{
+    var emprestimo = await context.Emprestimos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+
+    if (emprestimo is null){return Results.NotFound(new{mensagem = "Empréstimo não encontrado."});}
+
+    return Results.Ok(emprestimo);
 });
 
 
