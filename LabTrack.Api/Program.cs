@@ -221,4 +221,81 @@ app.MapPost("/api/alunos", async (
     return Results.Created($"/api/alunos/{aluno.Id}", aluno);
 });
 
+
+ // POST: /api/emprestimos registra um novo empréstimo
+app.MapPost("/api/emprestimos", async (
+    [FromBody] EmprestimoRequest requisicao,
+    [FromServices] LabTrackContext context) =>
+{
+    // verifica se os identificadores foram informados
+    if (requisicao.AlunoId == Guid.Empty ||
+        requisicao.EquipamentoId == Guid.Empty)
+    {
+        return Results.BadRequest(new{mensagem = "AlunoId e EquipamentoId são obrigatórios."});
+    }
+
+    // verifica se o aluno existe
+    var alunoExiste = await context.Alunos
+        .AnyAsync(a => a.Id == requisicao.AlunoId);
+
+    if (!alunoExiste){return Results.NotFound(new{mensagem = "Aluno não encontrado."});}
+
+    // verifica se o equipamento existe
+    var equipamentoExiste = await context.Equipamentos.AnyAsync(e => e.Id == requisicao.EquipamentoId);
+
+    if (!equipamentoExiste){return Results.NotFound(new{ mensagem = "Equipamento não encontrado."});}
+
+    // verifica se o equipamento já está emprestado
+    var equipamentoEmprestado = await context.Emprestimos.AnyAsync(e =>
+        e.EquipamentoId == requisicao.EquipamentoId &&
+        e.DataDevolucao == null);
+
+    if (equipamentoEmprestado){return Results.Conflict(new{mensagem = "Este equipamento já está emprestado."});}
+
+    var emprestimo = new Emprestimo
+    {
+        AlunoId = requisicao.AlunoId,
+        EquipamentoId = requisicao.EquipamentoId,
+        DataEmprestimo = DateTime.UtcNow,
+        DataDevolucao = null
+    };
+
+    context.Emprestimos.Add(emprestimo);
+
+    try{await context.SaveChangesAsync();
+    }catch (DbUpdateException ex) when (ex.InnerException is Microsoft.Data.Sqlite.SqliteException sqliteEx && sqliteEx.SqliteExtendedErrorCode == 2067)
+    {
+        return Results.Conflict(new{mensagem = "Conflito de dados: o equipamento pode já estar emprestado."});
+    }
+
+    return Results.Created($"/api/emprestimos/{emprestimo.Id}",emprestimo);
+});
+
+
+ // GET: /api/emprestimos lista todos os empréstimos
+app.MapGet("/api/emprestimos", async (
+    [FromServices] LabTrackContext context) =>
+{
+    var emprestimos = await context.Emprestimos
+        .AsNoTracking()
+        .OrderByDescending(e => e.DataEmprestimo)
+        .ToListAsync();
+
+    return Results.Ok(emprestimos);
+});
+
+
+ // GET: /api/emprestimos/{id} -> consulta um empréstimo pelo ID
+app.MapGet("/api/emprestimos/{id:guid}", async (
+    [FromRoute] Guid id,
+    [FromServices] LabTrackContext context) =>
+{
+    var emprestimo = await context.Emprestimos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+
+    if (emprestimo is null){return Results.NotFound(new{mensagem = "Empréstimo não encontrado."});}
+
+    return Results.Ok(emprestimo);
+});
+
+
 app.Run();

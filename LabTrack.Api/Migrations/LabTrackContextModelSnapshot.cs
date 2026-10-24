@@ -41,6 +41,35 @@ namespace LabTrack.Api.Migrations
                     b.ToTable("Alunos");
                 });
 
+            modelBuilder.Entity("LabTrack.Api.Models.Emprestimo", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("AlunoId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime?>("DataDevolucao")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("DataEmprestimo")
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("EquipamentoId")
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("AlunoId");
+
+                    b.HasIndex("EquipamentoId")
+                        .IsUnique()
+                        .HasFilter("\"DataDevolucao\" IS NULL");
+
+                    b.ToTable("Emprestimos");
+                });
+
             modelBuilder.Entity("LabTrack.Api.Models.Equipamento", b =>
                 {
                     b.Property<Guid>("Id")
@@ -63,6 +92,21 @@ namespace LabTrack.Api.Migrations
                         .IsUnique();
 
                     b.ToTable("Equipamentos");
+                });
+
+            modelBuilder.Entity("LabTrack.Api.Models.Emprestimo", b =>
+                {
+                    b.HasOne("LabTrack.Api.Models.Aluno", null)
+                        .WithMany()
+                        .HasForeignKey("AlunoId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("LabTrack.Api.Models.Equipamento", null)
+                        .WithMany()
+                        .HasForeignKey("EquipamentoId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
                 });
 #pragma warning restore 612, 618
         }
