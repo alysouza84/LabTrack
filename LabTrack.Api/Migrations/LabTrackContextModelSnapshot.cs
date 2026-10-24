@@ -17,6 +17,30 @@ namespace LabTrack.Api.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.13");
 
+            modelBuilder.Entity("LabTrack.Api.Models.Aluno", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Matricula")
+                        .IsRequired()
+                        .HasMaxLength(20)
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Nome")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("TEXT");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Matricula")
+                        .IsUnique();
+
+                    b.ToTable("Alunos");
+                });
+
             modelBuilder.Entity("LabTrack.Api.Models.Equipamento", b =>
                 {
                     b.Property<Guid>("Id")
