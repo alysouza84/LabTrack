@@ -89,4 +89,45 @@ app.MapPost("/api/equipamentos", async (
     return Results.Created($"/api/equipamentos/{equipamento.Id}", equipamento);
 });
 
+// o PUT: /api/equipamentos/{id} atualiza um equipamento existente
+app.MapPut("/api/equipamentos/{id:guid}", async(
+    [FromRoute] Guid id,
+    [FromBody] EquipamentoRequest requisicao,
+    [FromServices] LabTrackContext context) =>{
+        //Busca por ID
+        var equipamento = await context.Equipamentos.FirstOrDefaultAsync(e => e.Id == id);
+
+        if(equipamento is null){
+            return Results.NotFound(new{ mensagem = "Equipamento não encontrado."});
+        }
+
+        //normalização dos dados
+        var nome = requisicao.Nome?.Trim();
+        var patrimonio = requisicao.Patrimonio?.Trim().ToUpperInvariant();
+
+        //validação dos campos
+        if(string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(patrimonio)){
+            return Results.BadRequest(new{ mensagem = "Nome e patrimonio são campos obrigatórios."});
+        }
+
+        //validação do tamanho
+        if(nome.Length > 100 || patrimonio.Length > 50){
+            return Results.BadRequest(new{  mensagem = "Nome tem limite máximo de 100 caracteres e patrimonio máximo de 50 caracteres."});
+        }
+
+        //verificca duplicidade de patrimonio
+        var patrimonioExiste = await context.Equipamentos.AnyAsync(e => e.Patrimonio == patrimonio && e.Id != id);
+        if (patrimonioExiste){return Results.Conflict(new{ mensagem = "Já existe equipamento com esse patrimonio"});}
+
+        //atualiza os dados do equipamento
+        equipamento.Nome = nome;
+        equipamento.Patrimonio = patrimonio;
+
+        //save
+        await context.SaveChangesAsync();
+
+        return Results.Ok(equipamento);
+    }
+);
+
 app.Run();
