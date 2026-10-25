@@ -330,4 +330,18 @@ app.MapPatch("/api/emprestimos/{id:guid}/devolucao", async (
     return Results.Ok(emprestimo);
 });
 
+//GET: /api/equipamentos/disponiveis - equipamentos que nao possuem emprestimos
+app.MapGet("/api/equipamentos/disponiveis", async(
+    [FromServices] LabTrackContext context) =>{
+        var equipamentosDisponiveis = await context.Equipamentos
+            .AsNoTracking()
+            .Where(e => !context.Emprestimos.Any(emp =>
+                emp.EquipamentoId == e.Id &&
+                emp.DataDevolucao == null))
+            .OrderBy(e => e.Nome).ToListAsync();
+        return Results.Ok(equipamentosDisponiveis);
+    }
+);
+
+
 app.Run();
