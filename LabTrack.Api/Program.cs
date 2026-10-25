@@ -304,5 +304,30 @@ app.MapGet("/api/emprestimos/{id:guid}", async (
     return Results.Ok(emprestimo);
 });
 
+// PATCH: /api/emprestimos/{id}/devolucao -> registra a devolucao de um emprestimo
+app.MapPatch("/api/emprestimos/{id:guid}/devolucao", async (
+    [FromRoute] Guid id,
+    [FromServices] LabTrackContext context) =>
+{
+    var emprestimo = await context.Emprestimos.FindAsync(id);
+
+    if (emprestimo is null)
+    {
+        return Results.NotFound(new { mensagem = "Empréstimo não encontrado." });
+    }
+
+    // Regra de negocio: nao permite devolver duas vezes
+    if (emprestimo.DataDevolucao is not null)
+    {
+        return Results.Conflict(new { mensagem = "Este empréstimo já foi devolvido." });
+    }
+
+    // Registra a devolucao com a data/hora do servidor (UTC, mesmo padrao do emprestimo)
+    emprestimo.DataDevolucao = DateTime.UtcNow;
+
+    await context.SaveChangesAsync();
+
+    return Results.Ok(emprestimo);
+});
 
 app.Run();
