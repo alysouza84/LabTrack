@@ -1,0 +1,1671 @@
+{
+  "info": {
+    "_postman_id": "f3039727-97d3-41fc-b108-23a4f61ccd27",
+    "name": "LabTrack - Testes",
+    "description": "Bateria completa de testes da API LabTrack.\n\nAntes de rodar as pastas 0 a 3: zere o banco dentro de LabTrack.Api com `dotnet ef database drop -f` e `dotnet ef database update`, e rode `dotnet run`.\nExecute as pastas 0, 1, 2 e 3 em sequência (Collection Runner). Depois reinicie a API e rode a pasta 4.\nA pasta 5 (vídeo) deve ser rodada sozinha, com o banco zerado de novo.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "0 - Geral",
+      "item": [
+        {
+          "name": "G1 - API no ar",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Tem mensagem\", () => pm.expect(pm.response.json()).to.have.property(\"mensagem\"));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "1 - Equipamentos (CRUD)",
+      "item": [
+        {
+          "name": "E1 - Listar (vazio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: (vazio)\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E2 - Cadastrar Notebook Dell (patrimonio normalizado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Notebook Dell\",\n  \"patrimonio\": \" lab001 \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Patrim\\u00f4nio normalizado para LAB001\", () => pm.expect(pm.response.json().patrimonio).to.eql(\"LAB001\"));",
+                  "pm.test(\"Header Location presente\", () => pm.response.to.have.header(\"Location\"));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"equipamentoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E3 - Buscar por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Nome\", () => pm.expect(pm.response.json().nome).to.eql(\"Notebook Dell\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E4 - Patrimonio duplicado",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Outro Notebook\",\n  \"patrimonio\": \"LAB001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E5 - Nome vazio",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\",\n  \"patrimonio\": \"LAB009\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E6 - Patrimonio com 51 caracteres",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Notebook\",\n  \"patrimonio\": \"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E7 - Corpo vazio {}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E8 - Cadastrar Projetor Epson",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Projetor Epson\",\n  \"patrimonio\": \"LAB002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"equipamentoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E9 - Listar (2 itens)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell, Projetor Epson\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\", \"Projetor Epson\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E10 - Alterar Projetor (mantendo o proprio patrimonio)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Projetor Epson X41\",\n  \"patrimonio\": \"lab002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Nome alterado\", () => pm.expect(pm.response.json().nome).to.eql(\"Projetor Epson X41\"));",
+                  "pm.test(\"Patrim\\u00f4nio\", () => pm.expect(pm.response.json().patrimonio).to.eql(\"LAB002\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E11 - Alterar para patrimonio de outro equipamento",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Projetor\",\n  \"patrimonio\": \"LAB001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E12 - Alterar com nome vazio",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"\",\n  \"patrimonio\": \"LAB002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E13 - Alterar id inexistente",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos/00000000-0000-0000-0000-000000000000",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"X\",\n  \"patrimonio\": \"LAB003\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E14 - Buscar alterado",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Altera\\u00e7\\u00e3o gravada\", () => pm.expect(pm.response.json().nome).to.eql(\"Projetor Epson X41\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E15 - Id em formato invalido",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/abc"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E16 - Excluir Projetor",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 204\", () => pm.response.to.have.status(204));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E17 - Excluir de novo",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "E18 - Listar (so Notebook Dell)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\"]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "2 - Alunos",
+      "item": [
+        {
+          "name": "A1 - Listar (vazio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alunos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: (vazio)\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A2 - Cadastrar Joao Silva (matricula com espacos)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alunos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"matricula\": \" 2026001 \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Matr\\u00edcula sem espa\\u00e7os\", () => pm.expect(pm.response.json().matricula).to.eql(\"2026001\"));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"alunoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A3 - Buscar por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alunos/{{alunoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Nome\", () => pm.expect(pm.response.json().nome).to.eql(\"João Silva\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A4 - Matricula duplicada",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alunos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Pedro\",\n  \"matricula\": \"2026001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A5 - Nome em branco",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alunos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"   \",\n  \"matricula\": \"2026002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A6 - Matricula com 21 caracteres",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alunos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Ana Lima\",\n  \"matricula\": \"123456789012345678901\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A7 - Cadastrar Maria Souza",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alunos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Maria Souza\",\n  \"matricula\": \"2026002\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"alunoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A8 - Listar (ordem alfabetica)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alunos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Jo\\u00e3o Silva, Maria Souza\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"João Silva\", \"Maria Souza\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "A9 - Id inexistente",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alunos/00000000-0000-0000-0000-000000000000"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "3 - Emprestimo, devolucao e disponiveis",
+      "item": [
+        {
+          "name": "F1 - Cadastrar Notebook Lenovo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Notebook Lenovo\",\n  \"patrimonio\": \"LAB100\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"equipamentoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F2 - Disponiveis (2)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/disponiveis"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell, Notebook Lenovo\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\", \"Notebook Lenovo\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F3 - Listar emprestimos (vazio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Lista vazia\", () => pm.expect(pm.response.json()).to.have.lengthOf(0));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F4 - Registrar emprestimo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"{{alunoId}}\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "pm.test(\"Empréstimo ativo (dataDevolucao nula)\", () => pm.expect(pm.response.json().dataDevolucao).to.be.null);",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"emprestimoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F5 - Buscar emprestimo por id",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F6 - Emprestar de novo o mesmo equipamento",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"{{alunoId}}\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensagem\", () => pm.expect(pm.response.json().mensagem).to.eql(\"Este equipamento já está emprestado.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F7 - Aluno inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"00000000-0000-0000-0000-000000000000\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F8 - Equipamento inexistente",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"{{alunoId}}\",\n  \"equipamentoId\": \"00000000-0000-0000-0000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F9 - Corpo vazio {}",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F10 - Id em formato invalido no corpo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"abc\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 400\", () => pm.response.to.have.status(400));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F11 - Disponiveis (Lenovo emprestado)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/disponiveis"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F12 - Excluir equipamento com historico",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F13 - Registrar devolucao",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}/devolucao"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"dataDevolucao preenchida\", () => pm.expect(pm.response.json().dataDevolucao).to.not.be.null);"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F14 - Devolver de novo",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}/devolucao"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));",
+                  "pm.test(\"Mensagem\", () => pm.expect(pm.response.json().mensagem).to.eql(\"Este empréstimo já foi devolvido.\"));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F15 - Devolver emprestimo inexistente",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos/00000000-0000-0000-0000-000000000000/devolucao"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 404\", () => pm.response.to.have.status(404));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F16 - Disponiveis (Lenovo voltou)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/disponiveis"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell, Notebook Lenovo\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\", \"Notebook Lenovo\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F17 - Emprestar de novo apos devolucao",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"{{alunoId}}\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"emprestimoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F18 - Listar emprestimos (historico + ativo)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"2 empréstimos\", () => pm.expect(pm.response.json()).to.have.lengthOf(2));",
+                  "pm.test(\"1 ativo e 1 devolvido\", () => pm.expect(pm.response.json().filter(x => x.dataDevolucao === null)).to.have.lengthOf(1));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "F19 - Listar equipamentos (emprestado continua no cadastro)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell, Notebook Lenovo\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\", \"Notebook Lenovo\"]));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "4 - Persistencia (reinicie a API antes)",
+      "item": [
+        {
+          "name": "P1 - Emprestimos continuam",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"2 empréstimos\", () => pm.expect(pm.response.json()).to.have.lengthOf(2));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "P2 - Alunos continuam",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/alunos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Jo\\u00e3o Silva, Maria Souza\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"João Silva\", \"Maria Souza\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "P3 - Equipamentos continuam",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell, Notebook Lenovo\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\", \"Notebook Lenovo\"]));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Pare a API (Ctrl+C) e rode `dotnet run` de novo ANTES de executar esta pasta. Prova que os dados estão gravados no SQLite."
+    },
+    {
+      "name": "5 - Video (rodar com banco zerado, separado das demais)",
+      "item": [
+        {
+          "name": "V01 - [Alysson] Cadastrar notebook ( lab001 )",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Notebook Dell\",\n  \"patrimonio\": \" lab001 \"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"equipamentoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V02 - [Alysson] Mesmo patrimonio de novo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/equipamentos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"Notebook Dell\",\n  \"patrimonio\": \"LAB001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V03 - [Alysson] Cadastrar aluno",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/alunos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"João Silva\",\n  \"matricula\": \"2026001\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"alunoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V04 - [Alysson] Listar equipamentos",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V05 - [Lucas] Disponiveis (LAB001 aparece)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/disponiveis"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\"]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V06 - [Lucas] Registrar emprestimo",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"{{alunoId}}\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 201\", () => pm.response.to.have.status(201));",
+                  "if (pm.response.code === 201) { pm.collectionVariables.set(\"emprestimoId\", pm.response.json().id); }"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V07 - [Lucas] Emprestar de novo (bloqueado)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": "{{baseUrl}}/api/emprestimos",
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"alunoId\": \"{{alunoId}}\",\n  \"equipamentoId\": \"{{equipamentoId}}\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V08 - [Lucas] Disponiveis (vazio)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/disponiveis"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: (vazio)\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([]));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V09 - [Lucas] Excluir equipamento com historico",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/{{equipamentoId}}"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V10 - [Lucas] Registrar devolucao",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}/devolucao"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V11 - [Lucas] Devolver de novo (bloqueado)",
+          "request": {
+            "method": "PATCH",
+            "header": [],
+            "url": "{{baseUrl}}/api/emprestimos/{{emprestimoId}}/devolucao"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 409\", () => pm.response.to.have.status(409));"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "V12 - [Lucas] Disponiveis (LAB001 voltou)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/equipamentos/disponiveis"
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test(\"Status 200\", () => pm.response.to.have.status(200));",
+                  "pm.test(\"Itens: Notebook Dell\", () => pm.expect(pm.response.json().map(x => x.nome)).to.eql([\"Notebook Dell\"]));"
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "description": "Roteiro do vídeo. Zere o banco (dotnet ef database drop -f && dotnet ef database update), suba a API e execute uma requisição por vez, na ordem."
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:5016"
+    },
+    {
+      "key": "equipamentoId",
+      "value": ""
+    },
+    {
+      "key": "alunoId",
+      "value": ""
+    },
+    {
+      "key": "emprestimoId",
+      "value": ""
+    }
+  ]
+}
