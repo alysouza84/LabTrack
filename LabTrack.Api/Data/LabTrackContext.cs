@@ -59,7 +59,7 @@ public class LabTrackContext : DbContext // ':' é a herença, ou seja, LabTrack
             entity.HasOne<Equipamento>()
                 .WithMany()
                 .HasForeignKey(e => e.EquipamentoId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.Restrict);
             
             entity.HasIndex(e => e.EquipamentoId)
                 .IsUnique()

@@ -140,6 +140,13 @@ app.MapDelete("/api/equipamentos/{id:guid}", async(
         //verifica existencia
         if(equipamento is null){return Results.NotFound(new{mensagem = "Equipamento não encontrado."});}
 
+        //Verifica se há emprestimos vinculados (preserva historico)
+        var possuiEmprestimos = await context.Emprestimos.AnyAsync(emp => emp.EquipamentoId == id);
+       if (possuiEmprestimos)
+        {
+            return Results.Conflict(new { mensagem = "Equipamento possui empréstimos vinculados e não pode ser excluído." });
+        } 
+
         //marca para exclusao
         context.Equipamentos.Remove(equipamento);
 

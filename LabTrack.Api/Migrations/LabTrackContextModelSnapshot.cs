@@ -105,7 +105,7 @@ namespace LabTrack.Api.Migrations
                     b.HasOne("LabTrack.Api.Models.Equipamento", null)
                         .WithMany()
                         .HasForeignKey("EquipamentoId")
-                        .OnDelete(DeleteBehavior.Cascade)
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 #pragma warning restore 612, 618
