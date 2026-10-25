@@ -4,6 +4,8 @@ API REST para controlar o empréstimo de equipamentos de laboratório (notebooks
 
 ---
 
+## Link vídeo: https://www.youtube.com/watch?v=1O7b_TGwab0
+
 ## 1. Identificação
 
 |                 |                                                                          |
