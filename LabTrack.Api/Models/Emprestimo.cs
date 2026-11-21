@@ -8,11 +8,17 @@ public class Emprestimo{
 
     //id do aluno
     public Guid AlunoId{get; set;}
+    
+    //navegação: aluno que pegou o equipamento
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Aluno? Aluno { get; set; }
 
     //id do equipamento emprestado
     public Guid EquipamentoId{get; set;}
+    
+    //navegação: equipamento emprestado
     [JsonIgnore(Condition = JsonIgnoreCondition.WhenWritingNull)]
+    public Equipamento? Equipamento { get; set; }
 
     //data do emprestimo
     public DateTime DataEmprestimo{get; set;} = DateTime.UtcNow;
