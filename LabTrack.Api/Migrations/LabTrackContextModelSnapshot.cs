@@ -96,17 +96,31 @@ namespace LabTrack.Api.Migrations
 
             modelBuilder.Entity("LabTrack.Api.Models.Emprestimo", b =>
                 {
-                    b.HasOne("LabTrack.Api.Models.Aluno", null)
-                        .WithMany()
+                    b.HasOne("LabTrack.Api.Models.Aluno", "Aluno")
+                        .WithMany("Emprestimos")
                         .HasForeignKey("AlunoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
 
-                    b.HasOne("LabTrack.Api.Models.Equipamento", null)
-                        .WithMany()
+                    b.HasOne("LabTrack.Api.Models.Equipamento", "Equipamento")
+                        .WithMany("Emprestimos")
                         .HasForeignKey("EquipamentoId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
+
+                    b.Navigation("Aluno");
+
+                    b.Navigation("Equipamento");
+                });
+
+            modelBuilder.Entity("LabTrack.Api.Models.Aluno", b =>
+                {
+                    b.Navigation("Emprestimos");
+                });
+
+            modelBuilder.Entity("LabTrack.Api.Models.Equipamento", b =>
+                {
+                    b.Navigation("Emprestimos");
                 });
 #pragma warning restore 612, 618
         }

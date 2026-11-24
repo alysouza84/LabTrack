@@ -280,12 +280,19 @@ app.MapPost("/api/emprestimos", async (
 
 
  // GET: /api/emprestimos lista todos os empréstimos
-app.MapGet("/api/emprestimos", async (
-    [FromServices] LabTrackContext context) =>
+app.MapGet("/api/emprestimos", async ([FromServices] LabTrackContext context) =>
 {
     var emprestimos = await context.Emprestimos
         .AsNoTracking()
         .OrderByDescending(e => e.DataEmprestimo)
+        .Select(e => new
+        {
+            e.Id,
+            e.DataEmprestimo,
+            e.DataDevolucao,
+            Aluno = new { e.Aluno!.Id, e.Aluno.Nome, e.Aluno.Matricula },
+            Equipamento = new { e.Equipamento!.Id, e.Equipamento.Nome, e.Equipamento.Patrimonio }
+        })
         .ToListAsync();
 
     return Results.Ok(emprestimos);
@@ -297,9 +304,20 @@ app.MapGet("/api/emprestimos/{id:guid}", async (
     [FromRoute] Guid id,
     [FromServices] LabTrackContext context) =>
 {
-    var emprestimo = await context.Emprestimos.AsNoTracking().FirstOrDefaultAsync(e => e.Id == id);
+    var emprestimo = await context.Emprestimos
+        .AsNoTracking()
+        .Where(e => e.Id == id)
+        .Select(e => new
+        {
+            e.Id,
+            e.DataEmprestimo,
+            e.DataDevolucao,
+            Aluno = new { e.Aluno!.Id, e.Aluno.Nome, e.Aluno.Matricula },
+            Equipamento = new { e.Equipamento!.Id, e.Equipamento.Nome, e.Equipamento.Patrimonio }
+        })
+        .FirstOrDefaultAsync();
 
-    if (emprestimo is null){return Results.NotFound(new{mensagem = "Empréstimo não encontrado."});}
+    if (emprestimo is null) { return Results.NotFound(new { mensagem = "Empréstimo não encontrado." }); }
 
     return Results.Ok(emprestimo);
 });
@@ -335,10 +353,9 @@ app.MapGet("/api/equipamentos/disponiveis", async(
     [FromServices] LabTrackContext context) =>{
         var equipamentosDisponiveis = await context.Equipamentos
             .AsNoTracking()
-            .Where(e => !context.Emprestimos.Any(emp =>
-                emp.EquipamentoId == e.Id &&
-                emp.DataDevolucao == null))
-            .OrderBy(e => e.Nome).ToListAsync();
+            .Where(e => !e.Emprestimos.Any(emp => emp.DataDevolucao == null))
+            .OrderBy(e => e.Nome)
+            .ToListAsync();
         return Results.Ok(equipamentosDisponiveis);
     }
 );

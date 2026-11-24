@@ -49,18 +49,18 @@ public class LabTrackContext : DbContext // ':' é a herença, ou seja, LabTrack
                 .IsUnique();
         });
 
-        modelBuilder.Entity<Emprestimo>(entity=>
-        {
-            entity.HasOne<Aluno>()
-                .WithMany()
+        modelBuilder.Entity<Emprestimo>(entity =>
+{
+            entity.HasOne(e => e.Aluno)
+                .WithMany(a => a.Emprestimos)
                 .HasForeignKey(e => e.AlunoId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
-            entity.HasOne<Equipamento>()
-                .WithMany()
+
+            entity.HasOne(e => e.Equipamento)
+                .WithMany(q => q.Emprestimos)
                 .HasForeignKey(e => e.EquipamentoId)
                 .OnDelete(DeleteBehavior.Restrict);
-            
+
             entity.HasIndex(e => e.EquipamentoId)
                 .IsUnique()
                 .HasFilter("\"DataDevolucao\" IS NULL");
