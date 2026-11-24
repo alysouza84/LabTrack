@@ -14,7 +14,22 @@ var connectionString = builder.Configuration.GetConnectionString("LabTrack")
 builder.Services.AddDbContext<LabTrackContext>(options =>
     options.UseSqlite(connectionString));
 
+// CORS: libera somente o front-end React (http://localhost:3000) para chamar a API pelo navegador
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("FrontLocal", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:3000")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
+
 var app = builder.Build();
+
+// Aplica a política de CORS antes dos endpoints
+app.UseCors("FrontLocal");
 
 // GET: / -> verifica se a API esta no ar;
 app.MapGet("/", () => Results.Ok (new { mensagem = "LabTrack API working!"}));

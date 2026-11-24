@@ -1,0 +1,362 @@
+/* =====================================================================
+   LabTrack — folha de estilos
+   Gerada com auxílio de IA (Claude, Anthropic) e revisada pela equipe.
+   ===================================================================== */
+
+/* ---------- Variáveis de tema (cores, sombras, bordas) ---------- */
+:root {
+  --cor-primaria: #1d4ed8;
+  --cor-primaria-escura: #1e3a8a;
+  --cor-primaria-clara: #dbeafe;
+  --cor-fundo: #f1f5f9;
+  --cor-superficie: #ffffff;
+  --cor-texto: #0f172a;
+  --cor-texto-suave: #64748b;
+  --cor-borda: #e2e8f0;
+  --cor-sucesso: #15803d;
+  --cor-sucesso-fundo: #dcfce7;
+  --cor-erro: #b91c1c;
+  --cor-erro-fundo: #fee2e2;
+  --cor-alerta: #b45309;
+  --cor-alerta-fundo: #fef3c7;
+  --raio: 10px;
+  --sombra: 0 1px 3px rgba(15, 23, 42, 0.08), 0 4px 14px rgba(15, 23, 42, 0.06);
+}
+
+/* ---------- Base ---------- */
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--cor-fundo);
+  color: var(--cor-texto);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue",
+    Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+}
+
+h2 {
+  margin: 0 0 16px;
+  font-size: 1.1rem;
+  color: var(--cor-primaria-escura);
+}
+
+/* ---------- Cabeçalho e abas ---------- */
+.cabecalho {
+  background: linear-gradient(135deg, var(--cor-primaria-escura), var(--cor-primaria));
+  color: #fff;
+  padding: 24px 24px 0;
+  box-shadow: var(--sombra);
+}
+
+.cabecalho-conteudo,
+.abas,
+.conteudo {
+  max-width: 1000px;
+  margin: 0 auto;
+}
+
+.logo {
+  margin: 0;
+  font-size: 1.8rem;
+  letter-spacing: 0.5px;
+}
+
+.subtitulo {
+  margin: 4px 0 20px;
+  color: #bfdbfe;
+  font-size: 0.95rem;
+}
+
+.abas {
+  display: flex;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.aba {
+  background: transparent;
+  border: none;
+  border-radius: var(--raio) var(--raio) 0 0;
+  color: #dbeafe;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 12px 20px;
+  transition: background 0.15s, color 0.15s;
+}
+
+.aba:hover {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+
+.aba-ativa,
+.aba-ativa:hover {
+  background: var(--cor-fundo);
+  color: var(--cor-primaria-escura);
+}
+
+/* ---------- Área de conteúdo e cartões ---------- */
+.conteudo {
+  padding: 24px;
+}
+
+.card {
+  background: var(--cor-superficie);
+  border: 1px solid var(--cor-borda);
+  border-radius: var(--raio);
+  box-shadow: var(--sombra);
+  margin-bottom: 24px;
+  padding: 20px 24px;
+}
+
+.card-cabecalho {
+  align-items: center;
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.card-cabecalho h2 {
+  margin: 0;
+}
+
+.em-construcao {
+  color: var(--cor-texto-suave);
+  text-align: center;
+}
+
+/* ---------- Formulários ---------- */
+.formulario {
+  align-items: flex-end;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+
+.campo {
+  display: flex;
+  flex: 1 1 220px;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.campo label {
+  color: var(--cor-texto-suave);
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.campo input,
+.campo select {
+  background: #fff;
+  border: 1px solid var(--cor-borda);
+  border-radius: 8px;
+  color: var(--cor-texto);
+  font-size: 0.95rem;
+  padding: 10px 12px;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+
+.campo input:focus,
+.campo select:focus {
+  border-color: var(--cor-primaria);
+  box-shadow: 0 0 0 3px var(--cor-primaria-clara);
+  outline: none;
+}
+
+.formulario-acoes {
+  display: flex;
+  gap: 8px;
+}
+
+/* ---------- Botões ---------- */
+.botao {
+  border: 1px solid transparent;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  font-weight: 600;
+  padding: 10px 18px;
+  transition: background 0.15s, transform 0.05s;
+}
+
+.botao:active {
+  transform: translateY(1px);
+}
+
+.botao:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.botao-primario {
+  background: var(--cor-primaria);
+  color: #fff;
+}
+
+.botao-primario:hover:not(:disabled) {
+  background: var(--cor-primaria-escura);
+}
+
+.botao-secundario {
+  background: #fff;
+  border-color: var(--cor-borda);
+  color: var(--cor-texto);
+}
+
+.botao-secundario:hover:not(:disabled) {
+  background: var(--cor-fundo);
+}
+
+.botao-perigo {
+  background: #fff;
+  border-color: #fecaca;
+  color: var(--cor-erro);
+}
+
+.botao-perigo:hover:not(:disabled) {
+  background: var(--cor-erro-fundo);
+}
+
+.botao-sucesso {
+  background: var(--cor-sucesso);
+  color: #fff;
+}
+
+.botao-sucesso:hover:not(:disabled) {
+  background: #166534;
+}
+
+.botao-pequeno {
+  font-size: 0.85rem;
+  padding: 6px 12px;
+}
+
+/* ---------- Tabelas ---------- */
+.tabela {
+  border-collapse: collapse;
+  width: 100%;
+}
+
+.tabela th {
+  border-bottom: 2px solid var(--cor-borda);
+  color: var(--cor-texto-suave);
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  padding: 10px 12px;
+  text-align: left;
+  text-transform: uppercase;
+}
+
+.tabela td {
+  border-bottom: 1px solid var(--cor-borda);
+  padding: 12px;
+  vertical-align: middle;
+}
+
+.tabela tbody tr:hover {
+  background: #f8fafc;
+}
+
+.tabela-vazia {
+  color: var(--cor-texto-suave);
+  font-style: italic;
+  text-align: center;
+}
+
+.tabela .coluna-acoes {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.coluna-acoes .botao + .botao {
+  margin-left: 8px;
+}
+
+.texto-suave {
+  color: var(--cor-texto-suave);
+  font-size: 0.85rem;
+}
+
+/* Patrimônio / matrícula em destaque, estilo "etiqueta" */
+.codigo {
+  background: var(--cor-primaria-clara);
+  border-radius: 6px;
+  color: var(--cor-primaria-escura);
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  padding: 2px 8px;
+}
+
+/* ---------- Selos de situação ---------- */
+.selo {
+  border-radius: 999px;
+  display: inline-block;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 3px 10px;
+}
+
+.selo-ativo {
+  background: var(--cor-alerta-fundo);
+  color: var(--cor-alerta);
+}
+
+.selo-devolvido {
+  background: var(--cor-sucesso-fundo);
+  color: var(--cor-sucesso);
+}
+
+/* ---------- Mensagens de retorno da API ---------- */
+.mensagem {
+  border-left: 4px solid;
+  border-radius: 8px;
+  font-weight: 500;
+  margin-bottom: 20px;
+  padding: 12px 16px;
+}
+
+.mensagem-sucesso {
+  background: var(--cor-sucesso-fundo);
+  border-color: var(--cor-sucesso);
+  color: var(--cor-sucesso);
+}
+
+.mensagem-erro {
+  background: var(--cor-erro-fundo);
+  border-color: var(--cor-erro);
+  color: var(--cor-erro);
+}
+
+/* ---------- Telas pequenas (celular) ---------- */
+@media (max-width: 640px) {
+  .cabecalho {
+    padding: 16px 16px 0;
+  }
+
+  .conteudo {
+    padding: 16px;
+  }
+
+  .card {
+    padding: 16px;
+  }
+
+  .aba {
+    padding: 10px 12px;
+  }
+
+  .tabela {
+    font-size: 0.85rem;
+  }
+
+  .tabela th,
+  .tabela td {
+    padding: 8px 6px;
+  }
+}
