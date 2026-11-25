@@ -3,6 +3,7 @@ using LabTrack.Api.Models;
 using LabTrack.Api.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,7 +70,7 @@ app.MapPost("/api/equipamentos", async (
 {
     // Normaliza dos dados recebdo
     var nome = requisicao.Nome?.Trim();
-    var patrimonio = requisicao.Patrimonio?.Trim().ToUpperInvariant();
+    var patrimonio = NormalizarPatrimonio(requisicao.Patrimonio);
 
     // Validacao 1: campos orbigatorios
     if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(patrimonio))
@@ -118,7 +119,7 @@ app.MapPut("/api/equipamentos/{id:guid}", async(
 
         //normalização dos dados
         var nome = requisicao.Nome?.Trim();
-        var patrimonio = requisicao.Patrimonio?.Trim().ToUpperInvariant();
+        var patrimonio = NormalizarPatrimonio(requisicao.Patrimonio);
 
         //validação dos campos
         if(string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(patrimonio)){
@@ -377,3 +378,14 @@ app.MapGet("/api/equipamentos/disponiveis", async(
 
 
 app.Run();
+
+static string? NormalizarPatrimonio(string? patrimonio)
+{
+    if (patrimonio is null)
+    {
+        return null;
+    }
+
+    return Regex.Replace(patrimonio, @"\s+", "")
+        .ToUpperInvariant();
+}
