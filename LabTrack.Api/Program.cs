@@ -3,6 +3,7 @@ using LabTrack.Api.Models;
 using LabTrack.Api.Requests;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Text.RegularExpressions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -69,7 +70,7 @@ app.MapPost("/api/equipamentos", async (
 {
     // Normaliza dos dados recebdo
     var nome = requisicao.Nome?.Trim();
-    var patrimonio = requisicao.Patrimonio?.Trim().ToUpperInvariant();
+    var patrimonio = NormalizarPatrimonio(requisicao.Patrimonio);
 
     // Validacao 1: campos orbigatorios
     if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(patrimonio))
@@ -118,7 +119,7 @@ app.MapPut("/api/equipamentos/{id:guid}", async(
 
         //normalização dos dados
         var nome = requisicao.Nome?.Trim();
-        var patrimonio = requisicao.Patrimonio?.Trim().ToUpperInvariant();
+        var patrimonio = NormalizarPatrimonio(requisicao.Patrimonio);
 
         //validação dos campos
         if(string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(patrimonio)){
@@ -155,12 +156,30 @@ app.MapDelete("/api/equipamentos/{id:guid}", async(
         //verifica existencia
         if(equipamento is null){return Results.NotFound(new{mensagem = "Equipamento não encontrado."});}
 
-        //Verifica se há emprestimos vinculados (preserva historico)
-        var possuiEmprestimos = await context.Emprestimos.AnyAsync(emp => emp.EquipamentoId == id);
-       if (possuiEmprestimos)
-        {
-            return Results.Conflict(new { mensagem = "Equipamento possui empréstimos vinculados e não pode ser excluído." });
-        } 
+        // Verifica se o equipamento possui empréstimo ativo
+var possuiEmprestimoAtivo = await context.Emprestimos
+    .AnyAsync(emp => emp.EquipamentoId == id
+        && emp.DataDevolucao == null);
+
+if (possuiEmprestimoAtivo)
+{
+    return Results.Conflict(new
+    {
+        mensagem = "Não é possível excluir este equipamento, pois ele está emprestado."
+    });
+}
+
+// Verifica se o equipamento possui histórico de empréstimos
+var possuiHistorico = await context.Emprestimos
+    .AnyAsync(emp => emp.EquipamentoId == id);
+
+if (possuiHistorico)
+{
+    return Results.Conflict(new
+    {
+        mensagem = "Não é possível excluir este equipamento, pois ele possui histórico de empréstimos que precisa ser preservado."
+    });
+}
 
         //marca para exclusao
         context.Equipamentos.Remove(equipamento);
@@ -208,7 +227,9 @@ app.MapPost("/api/alunos", async (
 {
     // Normaliza os dados recebidos
     var nome = requisicao.Nome?.Trim();
-    var matricula = requisicao.Matricula?.Trim();
+    var matricula = requisicao.Matricula is null
+    ? null
+    : Regex.Replace(requisicao.Matricula, @"\s+", "");
 
     // Validação 1: campos obrigatórios
     if (string.IsNullOrWhiteSpace(nome) || string.IsNullOrWhiteSpace(matricula))
@@ -377,3 +398,14 @@ app.MapGet("/api/equipamentos/disponiveis", async(
 
 
 app.Run();
+
+static string? NormalizarPatrimonio(string? patrimonio)
+{
+    if (patrimonio is null)
+    {
+        return null;
+    }
+
+    return Regex.Replace(patrimonio, @"\s+", "")
+        .ToUpperInvariant();
+}

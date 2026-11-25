@@ -1,5 +1,8 @@
 import { useState } from "react";
 import "./App.css";
+import Alunos from "./components/Alunos";
+import Disponiveis from "./components/Disponiveis";
+import Emprestimos from "./components/Emprestimos";
 import Equipamentos from "./components/Equipamentos";
 
 // As quatro abas da aplicação
@@ -38,9 +41,9 @@ function App() {
 
       <main className="conteudo">
         {abaAtual === "equipamentos" && <Equipamentos />}
-        {abaAtual !== "equipamentos" && (
-          <div className="card em-construcao">Tela em desenvolvimento.</div>
-        )}
+        {abaAtual === "alunos" && <Alunos />}
+        {abaAtual === "emprestimos" && <Emprestimos />}
+        {abaAtual === "disponiveis" && <Disponiveis />}
       </main>
     </div>
   );
